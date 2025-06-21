@@ -1,2 +1,249 @@
-你好啊
-但是看我好像没有什么用诶
+-- 获取必要的服务
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- 获取本地玩家和PlayerGui
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 创建主ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AdvancedUIGui"
+screenGui.Parent = playerGui
+
+-- 1. 首先在屏幕中央显示文字
+local welcomeText = Instance.new("TextLabel")
+welcomeText.Name = "WelcomeText"
+welcomeText.Text = "欢迎使用78HUB"
+welcomeText.TextSize = 24
+welcomeText.TextColor3 = Color3.new(1, 1, 1)
+welcomeText.Font = Enum.Font.SourceSansBold
+welcomeText.BackgroundTransparency = 1
+welcomeText.Size = UDim2.new(0, 300, 0, 50)
+welcomeText.Position = UDim2.new(0.5, -150, 0.5, -25)
+welcomeText.Parent = screenGui
+
+-- 2秒后淡出欢迎文字
+task.delay(2, function()
+    local tween = TweenService:Create(
+        welcomeText,
+        TweenInfo.new(0.5),
+        {TextTransparency = 1}
+    )
+    tween:Play()
+    tween.Completed:Connect(function()
+        welcomeText:Destroy()
+        createMainUI() -- 创建主UI
+    end)
+end)
+
+-- 创建主UI函数
+function createMainUI()
+    -- 创建主容器
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    mainFrame.Size = UDim2.new(0, 0, 0, 0) -- 初始大小为0
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.ClipsDescendants = true
+    mainFrame.Parent = screenGui
+    
+    -- 添加圆角
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- 创建彩色边框
+    local border = Instance.new("Frame")
+    border.Name = "Border"
+    border.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    border.Size = UDim2.new(1, 0, 1, 0)
+    border.ZIndex = -1
+    border.Parent = mainFrame
+    
+    local borderCorner = Instance.new("UICorner")
+    borderCorner.CornerRadius = UDim.new(0, 12)
+    borderCorner.Parent = border
+    
+    -- 边框动画：随机变换颜色
+    local borderTween
+    local function animateBorder()
+        if borderTween then borderTween:Cancel() end
+        
+        local targetColor = Color3.fromRGB(
+            math.random(50, 255),
+            math.random(50, 255),
+            math.random(50, 255)
+        )
+        
+        borderTween = TweenService:Create(
+            border,
+            TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+            {BackgroundColor3 = targetColor}
+        )
+        borderTween:Play()
+        borderTween.Completed:Connect(function()
+            task.wait(1)
+            animateBorder()
+        end)
+    end
+    
+    -- 创建UI布局
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 5)
+    layout.Parent = mainFrame
+    
+    -- 左侧选项栏
+    local optionsFrame = Instance.new("Frame")
+    optionsFrame.Name = "OptionsFrame"
+    optionsFrame.BackgroundTransparency = 1
+    optionsFrame.Size = UDim2.new(0, 120, 1, 0)
+    optionsFrame.Parent = mainFrame
+    
+    local optionsLayout = Instance.new("UIListLayout")
+    optionsLayout.Padding = UDim.new(0, 10)
+    optionsLayout.Parent = optionsFrame
+    
+    -- 右侧内容区
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Size = UDim2.new(0, 360, 1, 0)
+    contentFrame.Parent = mainFrame
+    
+    local contentScrolling = Instance.new("ScrollingFrame")
+    contentScrolling.Name = "ContentScrolling"
+    contentScrolling.BackgroundTransparency = 1
+    contentScrolling.Size = UDim2.new(1, 0, 1, 0)
+    contentScrolling.CanvasSize = UDim2.new(0, 0, 2, 0) -- 可滚动区域
+    contentScrolling.ScrollBarThickness = 5
+    contentScrolling.Parent = contentFrame
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.Padding = UDim.new(0, 15)
+    contentLayout.Parent = contentScrolling
+    
+    -- 添加选项按钮
+    local options = {
+        {name = "主页", color = Color3.fromRGB(70, 130, 180)},
+        {name = "设置", color = Color3.fromRGB(50, 160, 80)},
+        {name = "帮助", color = Color3.fromRGB(200, 100, 50)},
+        {name = "关于", color = Color3.fromRGB(150, 70, 200)}
+    }
+    
+    local currentPage = nil
+    
+    for i, option in ipairs(options) do
+        local optionButton = Instance.new("TextButton")
+        optionButton.Name = option.name
+        optionButton.Text = option.name
+        optionButton.TextColor3 = Color3.new(1, 1, 1)
+        optionButton.TextSize = 16
+        optionButton.Font = Enum.Font.SourceSansBold
+        optionButton.BackgroundColor3 = option.color
+        optionButton.AutoButtonColor = false
+        optionButton.Size = UDim2.new(1, 0, 0, 40)
+        optionButton.Parent = optionsFrame
+        
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 8)
+        buttonCorner.Parent = optionButton
+        
+        -- 按钮悬停效果
+        optionButton.MouseEnter:Connect(function()
+            TweenService:Create(
+                optionButton,
+                TweenInfo.new(0.2),
+                {BackgroundTransparency = 0.2}
+            ):Play()
+        end)
+        
+        optionButton.MouseLeave:Connect(function()
+            TweenService:Create(
+                optionButton,
+                TweenInfo.new(0.2),
+                {BackgroundTransparency = 0}
+            ):Play()
+        end)
+        
+        -- 按钮点击事件
+        optionButton.MouseButton1Click:Connect(function()
+            if currentPage then
+                currentPage:Destroy()
+            end
+            
+            -- 创建对应内容页面
+            local page = Instance.new("Frame")
+            page.Name = option.name .. "Page"
+            page.BackgroundTransparency = 1
+            page.Size = UDim2.new(1, 0, 0, 300)
+            page.Parent = contentScrolling
+            
+            local title = Instance.new("TextLabel")
+            title.Text = option.name .. "内容区域"
+            title.TextSize = 20
+            title.TextColor3 = Color3.new(1, 1, 1)
+            title.Font = Enum.Font.SourceSansBold
+            title.BackgroundTransparency = 1
+            title.Size = UDim2.new(1, 0, 0, 40)
+            title.Parent = page
+            
+            -- 添加一些示例按钮
+            for j = 1, 5 do
+                local contentButton = Instance.new("TextButton")
+                contentButton.Text = option.name .. " 按钮 " .. j
+                contentButton.TextColor3 = Color3.new(1, 1, 1)
+                contentButton.TextSize = 14
+                contentButton.Font = Enum.Font.SourceSans
+                contentButton.BackgroundColor3 = option.color
+                contentButton.AutoButtonColor = false
+                contentButton.Size = UDim2.new(1, -20, 0, 35)
+                contentButton.Position = UDim2.new(0, 10, 0, 50 + (j-1)*45)
+                contentButton.Parent = page
+                
+                local btnCorner = Instance.new("UICorner")
+                btnCorner.CornerRadius = UDim.new(0, 6)
+                btnCorner.Parent = contentButton
+                
+                -- 按钮动画
+                contentButton.MouseEnter:Connect(function()
+                    TweenService:Create(
+                        contentButton,
+                        TweenInfo.new(0.2),
+                        {BackgroundTransparency = 0.3}
+                    ):Play()
+                end)
+                
+                contentButton.MouseLeave:Connect(function()
+                    TweenService:Create(
+                        contentButton,
+                        TweenInfo.new(0.2),
+                        {BackgroundTransparency = 0}
+                    ):Play()
+                end)
+            end
+            
+            currentPage = page
+            
+            -- 自动滚动到顶部
+            contentScrolling.CanvasPosition = Vector2.new(0, 0)
+        end)
+    end
+    
+    -- 初始动画：从中心放大显示
+    local openTween = TweenService:Create(
+        mainFrame,
+        TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 500, 0, 400)}
+    )
+    openTween:Play()
+    
+    -- 开始边框动画
+    animateBorder()
+    
+    -- 默认选择第一个选项
+    optionsFrame:FindFirstChild(options[1].name).MouseButton1Click:Wait()
+end
